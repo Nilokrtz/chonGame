@@ -7,6 +7,7 @@ import java.util.List;
 import chon.group.game.core.Entity;
 import chon.group.game.domain.agent.Agent;
 import chon.group.game.domain.agent.Shot;
+import chon.group.game.domain.agent.Slash;
 import chon.group.game.messaging.Message;
 import javafx.scene.image.Image;
 
@@ -53,6 +54,9 @@ public class Environment {
     /** List of shots present in the environment. */
     private List<Shot> shots;
 
+    /** List of slashes present in the environment. */
+    private List<Slash> slashes;
+
     /**
      * Default constructor to create an empty environment.
      */
@@ -78,6 +82,8 @@ public class Environment {
         this.agents = new ArrayList<Agent>();
         this.messages = new ArrayList<Message>();
         this.shots = new ArrayList<Shot>();
+        this.slashes = new ArrayList<Slash>();
+
     }
 
     /**
@@ -100,6 +106,7 @@ public class Environment {
         this.agents = agents;
         this.messages = new ArrayList<Message>();
         this.shots = new ArrayList<Shot>();
+        this.slashes = new ArrayList<Slash>();
     }
 
     /**
@@ -301,6 +308,19 @@ public class Environment {
         this.shots = shots;
     }
 
+        public List<Slash> getSlashes() {
+        return slashes;
+    }
+
+    /**
+     * Sets the list of slashes present in the environment.
+     *
+     * @param agents the new list of slashes
+     */
+    public void setSlashes(List<Slash> slashes) {
+        this.slashes = slashes;
+    }
+
     /**
      * Checks if the protagonist is within the environment's boundaries and adjusts
      * its position if necessary.
@@ -392,5 +412,31 @@ public class Environment {
             }
         }
     }
+
+    public void updateSlashes() {
+        Iterator<Slash> itSlash = this.slashes.iterator();
+        while (itSlash.hasNext()) {
+            Slash slash = itSlash.next();
+
+            boolean hit = false;
+            Iterator<Agent> itAgent = this.agents.iterator();
+            while (itAgent.hasNext()) {
+                Agent agent = itAgent.next();
+                if (this.intersect(agent, slash)) {
+                    agent.takeDamage(slash.getDamage(), this.messages);
+                    if (agent.isDead())
+                        itAgent.remove(); 
+                    hit = true;
+                    break;
+                }
+            }
+
+            // Check if the slash intersects with the protagonist
+            if (hit || slash.shouldRemove()) {
+                itSlash.remove();
+            }
+        }
+}
+
 
 }

@@ -4,6 +4,7 @@ import java.util.ArrayList;
 
 import chon.group.game.domain.agent.Agent;
 import chon.group.game.domain.agent.Cannon;
+import chon.group.game.domain.agent.CloseWeapon;
 import chon.group.game.domain.agent.Fireball;
 import chon.group.game.domain.agent.Weapon;
 import chon.group.game.domain.environment.Environment;
@@ -12,12 +13,12 @@ import chon.group.game.drawer.JavaFxMediator;
 import javafx.animation.AnimationTimer;
 import javafx.application.Application;
 import javafx.event.EventHandler;
-import javafx.stage.Stage;
 import javafx.scene.Scene;
 import javafx.scene.canvas.Canvas;
 import javafx.scene.canvas.GraphicsContext;
 import javafx.scene.input.KeyEvent;
 import javafx.scene.layout.StackPane;
+import javafx.stage.Stage;
 
 /**
  * The {@code Engine} class represents the main entry point of the application
@@ -39,6 +40,8 @@ public class Engine extends Application {
 
     /* If the game is paused or not. */
     private boolean isPaused = false;
+    private boolean canSlash = true;
+
 
     /**
      * Main entry point of the application.
@@ -49,7 +52,7 @@ public class Engine extends Application {
     public static void main(String[] args) {
         launch(args);
     }
-
+    
     /**
      * Starts the JavaFX application and initializes the game environment, agents,
      * and graphical components.
@@ -65,14 +68,16 @@ public class Engine extends Application {
         try {
             /* Initialize the game environment and agents */
             Environment environment = new Environment(0, 0, 1280, 780, "/images/environment/castle.png");
-            Agent chonBota = new Agent(400, 390, 90, 65, 3, 1000, "/images/agents/chonBota.png", false);
+            Agent chonbota = new Agent(400, 390, 90, 65, 3, 1000, "/images/agents/chonBota.png", false);
             Weapon cannon = new Cannon(400, 390, 0, 0, 3, 0, "", false);
             Weapon fireball = new Fireball(400, 390, 0, 0, 3, 0, "", false);
-            chonBota.setWeapon(fireball);
+            CloseWeapon sword = new chon.group.game.domain.agent.Sword(400, 390, 0, 0, 3, 0, "", false);
+            chonbota.setWeapon(fireball);
+            chonbota.setCloseWeapon(sword);
 
-            Agent chonBot = new Agent(920, 440, 90, 65, 1, 500, "/images/agents/chonBot.png", true);
-            environment.setProtagonist(chonBota);
-            environment.getAgents().add(chonBot);
+            Agent chonbot = new Agent(920, 440, 90, 65, 1, 500, "/images/agents/chonBot.png", true);
+            environment.setProtagonist(chonbota);
+            environment.getAgents().add(chonbot);
             environment.setPauseImage("/images/environment/pause.png");
             environment.setGameOverImage("/images/environment/gameover.png");
 
@@ -115,12 +120,16 @@ public class Engine extends Application {
                     String code = e.getCode().toString();
                     System.out.println("Released: " + code);
                     input.remove(code);
+
+                    if (code.equals("SPACE")) {
+                        canSlash = true;  // permite novo slash após soltar
+                    }
                 }
             });
 
             /* Start the game loop */
             new AnimationTimer() {
-
+                
                 /**
                  * The game loop, called on each frame.
                  *
@@ -135,10 +144,14 @@ public class Engine extends Application {
                         /* Still prints ongoing messages (e.g., last hit taken) */
                         environment.updateMessages();
                         environment.updateShots();
+                        environment.updateSlashes();
                         mediator.drawBackground();
                         mediator.drawAgents();
                         mediator.drawShots();
+                        mediator.drawSlashes();
+
                         mediator.drawMessages();
+                        
                         /* Rendering the Game Over Screen */
                         mediator.drawGameOver();
                     } else {
@@ -147,25 +160,25 @@ public class Engine extends Application {
                             mediator.drawAgents();
                             mediator.drawMessages();
                             mediator.drawShots();
+                            mediator.drawSlashes();
+                            
                             /* Rendering the Pause Screen */
                             mediator.drawPauseScreen();
                         } else {
-                            /* ChonBota Only Moves if the Player Press Something */
+                            /* chonbota Only Moves if the Player Press Something */
                             /* Update the protagonist's movements if input exists */
                             if (!input.isEmpty()) {
-                                /* ChonBota Shoots Somebody Who Outdrew You */
-                                if (input.contains("SPACE")) {
+                                if (input.contains("SPACE") && canSlash) {
                                     input.remove("SPACE");
-                                    String direction;
-                                    if (chonBota.isFlipped())
-                                        direction = "LEFT";
-                                    else
-                                        direction = "RIGHT";
-                                    environment.getShots().add(chonBota.getWeapon().fire(chonBota.getPosX(),
-                                            chonBota.getPosY(),
-                                            direction));
+                                    /* Stop the weapon to attack */
+                                    canSlash = false;
+
+                                    String direction = chonbota.isFlipped() ? "LEFT" : "RIGHT";
+                                    environment.getSlashes().add(
+                                        chonbota.getCloseWeapon().slash(chonbota.getPosX(), chonbota.getPosY(), direction)
+                                    );
                                 }
-                                /* ChonBota's Movements */
+
                                 environment.getProtagonist().move(input);
                                 environment.checkBorders();
                             }
@@ -179,10 +192,12 @@ public class Engine extends Application {
                             environment.detectCollision();
                             environment.updateShots();
                             environment.updateMessages();
+                            environment.updateSlashes();
                             mediator.drawBackground();
                             mediator.drawAgents();
                             mediator.drawShots();
                             mediator.drawMessages();
+                            mediator.drawSlashes();
                         }
                     }
                 }
