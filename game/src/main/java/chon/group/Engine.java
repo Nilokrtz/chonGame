@@ -181,28 +181,16 @@ public class Engine extends Application {
                             Iterator<Collision> it = environment.getCollisions().iterator();
                             while (it.hasNext()) {
                                 Collision collision = it.next();
-
                                 Iterator<Shot> itShot = environment.getShots().iterator();
                                 while (itShot.hasNext()) {
                                     Shot tempShot = itShot.next();
                                     tempShot.checkCollision(collision);
-                                    if (collision.isDestroy()) {
-                                        itShot.remove();
-                                        break;
-                                    }    
+                                    if (collision.isDestroy()) break;
                                 }
-                                if (collision.isDestroy()) {
-                                    it.remove(); // remove com segurança da lista
-                                }
-                                
                                 for (Agent agent : environment.getAgents()) {
                                     agent.checkCollision(collision, environment);
                                     if (collision.isDestroy()) break;
                                 }
-                                if (collision.isDestroy()) {
-                                    it.remove(); // remove com segurança da lista
-                                }
-
                                 environment.getProtagonist().checkCollision(collision, environment);
                                 if (collision.isDestroy()) {
                                     it.remove(); // remove com segurança da lista
