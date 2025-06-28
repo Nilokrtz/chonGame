@@ -53,4 +53,9 @@ public interface EnvironmentDrawer {
      */
     void drawGameOver();
 
+    /**
+     * Draws all collisions present in the environment.
+     */
+    void drawCollisions();
+
 }

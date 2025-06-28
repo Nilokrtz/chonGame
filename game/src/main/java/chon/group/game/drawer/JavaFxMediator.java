@@ -3,6 +3,7 @@ package chon.group.game.drawer;
 import java.util.Iterator;
 
 import chon.group.game.domain.agent.Agent;
+import chon.group.game.domain.agent.Collision;
 import chon.group.game.domain.agent.Shot;
 import chon.group.game.domain.environment.Environment;
 import chon.group.game.messaging.Message;
@@ -54,6 +55,20 @@ public class JavaFxMediator implements EnvironmentDrawer {
                 this.environment.getHeight());
     }
 
+    /**
+     * Renders all collisions within the environment,
+     */
+    @Override
+    public void drawCollisions() {
+        for (Collision collision : this.environment.getCollisions()) {
+            drawer.drawImage(collision.getImage(),
+                    collision.getX(),
+                    collision.getY(),
+                    collision.getWidth(),
+                    collision.getHeight());
+        }
+    }
+    
     /**
      * Renders all agents and the protagonist within the environment,
      * including their health bars and status panels.

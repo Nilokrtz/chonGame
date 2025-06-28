@@ -6,6 +6,7 @@ import java.util.List;
 
 import chon.group.game.core.Entity;
 import chon.group.game.domain.agent.Agent;
+import chon.group.game.domain.agent.Collision;
 import chon.group.game.domain.agent.Hitbox;
 import chon.group.game.domain.agent.Shot;
 import chon.group.game.messaging.Message;
@@ -54,6 +55,9 @@ public class Environment {
     /** List of shots present in the environment. */
     private List<Shot> shots;
 
+    /** List of collisions present in the environment. */
+    private List<Collision> collisions;
+
     /**
      * Default constructor to create an empty environment.
      */
@@ -77,6 +81,7 @@ public class Environment {
         this.width = width;
         this.setImage(pathImage);
         this.agents = new ArrayList<Agent>();
+        this.collisions = new ArrayList<Collision>();
         this.messages = new ArrayList<Message>();
         this.shots = new ArrayList<Shot>();
     }
@@ -303,6 +308,24 @@ public class Environment {
     }
 
     /**
+     * Gets the list of collisions present in the environment.
+     *
+     * @return the list of collisions
+     */
+    public List<Collision> getCollisions() {
+        return collisions;
+    }
+
+    /**
+     * Sets the list of collisions present in the environment.
+     *
+     * @param collisions the new list of collisions
+     */
+    public void setCollisions(ArrayList<Collision> collisions) {
+        this.collisions = collisions;
+    }
+
+    /**
      * Checks if the protagonist is within the environment's boundaries and adjusts
      * its position if necessary.
      */
@@ -318,25 +341,27 @@ public class Environment {
         }
     }*/
 
-    public void checkBorders() {
-        Hitbox hitbox = this.protagonist.getHitbox();
+    public void checkBorders(Agent agent) {
+        Hitbox hitbox = agent.getHitbox();
         if (hitbox == null) {
             return;
         }
-        int hitboxX = this.protagonist.getPosX() + hitbox.getOffsetX();
-        int hitboxY = this.protagonist.getPosY() + hitbox.getOffsetY();
+        int hitboxX = agent.getPosX() + hitbox.getOffsetX();
+        int hitboxY = agent.getPosY() + hitbox.getOffsetY();
 
         if (hitboxX < 0) {
-            this.protagonist.setPosX(-hitbox.getOffsetX());
+            agent.setPosX(-hitbox.getOffsetX());
         }
         else if ((hitboxX + hitbox.getWidth()) > this.width) {
-            this.protagonist.setPosX(this.width - hitbox.getWidth() - hitbox.getOffsetX());
+            agent.setPosX(this.width - hitbox.getWidth() - hitbox.getOffsetX());
         }
         if (hitboxY < 0) {
-            this.protagonist.setPosY(-hitbox.getOffsetY());
+            agent.setPosY(-hitbox.getOffsetY());
         }
         else if ((hitboxY + hitbox.getHeight()) > this.height) {
-            this.protagonist.setPosY(this.height - hitbox.getHeight() - hitbox.getOffsetY());
+            agent.setGrounded(true);
+            agent.setVelocityY(0);
+            agent.setPosY(this.height - hitbox.getHeight() - hitbox.getOffsetY());
         }
     }
 
@@ -440,4 +465,8 @@ public class Environment {
         }
     }
 
+    public void createGround(int height, String image) {
+        Collision ground = new Collision(0, this.height - height, this.width, 64, image, false, false, 0, false, false, false);
+        getCollisions().add(ground);
+    }
 }

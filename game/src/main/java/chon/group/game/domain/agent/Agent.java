@@ -3,6 +3,7 @@ package chon.group.game.domain.agent;
 import java.util.List;
 
 import chon.group.game.core.Entity;
+import chon.group.game.domain.environment.Environment;
 import chon.group.game.messaging.Message;
 
 /**
@@ -23,6 +24,12 @@ public class Agent extends Entity {
 
     /* The Agent's Weapon */
     private Weapon weapon;
+
+    private boolean grounded = false;
+    private boolean canJump = false;
+    private int velocityY = 0;
+    private final int JUMP_STRENGTH = 18; // tweak as needed
+    private final int GRAVITY = 1;
 
     /**
      * Constructor to initialize the agent properties.
@@ -182,4 +189,143 @@ public class Agent extends Entity {
             updateHitboxPosition();
         }
     }
+
+    public void gravityMove(List<String> movements) {
+        // Horizontal movement
+        if (movements.contains("RIGHT")) {
+            if (isFlipped()) {
+                flipImage();
+                setFlipped(false);
+            }
+            setPosX(getPosX() + getSpeed());
+        }
+        if (movements.contains("LEFT")) {
+            if (!isFlipped()) {
+                flipImage();
+                setFlipped(true);
+            }
+            setPosX(getPosX() - getSpeed());
+        }
+
+        // Jump logic
+        if (isGrounded() && movements.contains("UP")) {
+            setVelocityY(-JUMP_STRENGTH); // negative because Y increases downward
+            setGrounded(false);
+        }
+
+        updateHitboxPosition();
+    }
+
+    public void gravityEffect() {
+        if (!isGrounded()) {
+            setVelocityY(getVelocityY() + GRAVITY); // gravity pulls down
+            setPosY(getPosY() + getVelocityY());
+            updateHitboxPosition();
+        }
+    }
+
+    public void checkCollision(Collision collision, Environment environment) {
+        // Use hitbox if available, otherwise use entity bounds
+        int ax, ay, aw, ah;
+        if (getHitbox() != null) {
+            ax = getPosX() + getHitbox().getOffsetX();
+            ay = getPosY() + getHitbox().getOffsetY();
+            aw = getHitbox().getWidth();
+            ah = getHitbox().getHeight();
+        } else {
+            ax = getPosX();
+            ay = getPosY();
+            aw = getWidth();
+            ah = getHeight();
+        }
+
+        int bx = collision.getX();
+        int by = collision.getY();
+        int bw = collision.getWidth();
+        int bh = collision.getHeight();
+
+        if (ax < bx + bw &&
+            ax + aw > bx &&
+            ay < by + bh &&
+            ay + ah > by) {
+
+            // Detecção de colisão (usando centro do hitbox ou entidade)
+            float centerAx = ax + aw / 2.0f;
+            float centerAy = ay + ah / 2.0f;
+            float centerBx = bx + bw / 2.0f;
+            float centerBy = by + bh / 2.0f;
+
+            float dx = centerAx - centerBx;
+            float dy = centerAy - centerBy;
+
+            float halfWidths = (aw / 2.0f) + (bw / 2.0f);
+            float halfHeights = (ah / 2.0f) + (bh / 2.0f);
+
+            float overlapX = halfWidths - Math.abs(dx);
+            float overlapY = halfHeights - Math.abs(dy);
+
+            // 1. Impedir passagem se não for passável
+            if (!collision.isPassable()) {
+                int fix = (int)Math.ceil(Math.min(overlapX, overlapY));
+                if (overlapX < overlapY) {
+                    if (dx > 0) {
+                        setPosX(getPosX() + fix);
+                    } else {
+                        setPosX(getPosX() - fix);
+                    }
+                } else {
+                    if (dy > 0) {
+                        setPosY(getPosY() + fix);
+                    } else {
+                        setGrounded(true);
+                        setVelocityY(0);
+                        setPosY(getPosY() - fix);
+                    }
+                }
+                updateHitboxPosition(); // Atualiza a posição do hitbox se necessário
+            }
+
+            // 2. Aplicar dano
+            if (collision.getDamage() > 0 && this == environment.getProtagonist()) {
+                takeDamage(collision.getDamage(), environment.getMessages());
+            }
+            else if (collision.getDamage() > 0 && collision.isAgentDamage()) {
+                takeDamage(collision.getDamage(), environment.getMessages());
+            }
+
+            // 3. Destruir ao contato
+            if (collision.isContactDestroy() && this == environment.getProtagonist()) {
+                collision.setDestroy(true);
+            }
+            else if (collision.isContactDestroy() && collision.isAgentContact()) {
+                collision.setDestroy(true);
+            }
+        }
+    }
+
+    public boolean isGrounded() {
+        return grounded;
+    }
+
+    public void setGrounded(boolean grounded) {
+        this.grounded = grounded;
+    }
+
+    public boolean isCanJump() {
+        return canJump;
+    }
+
+    public void setCanJump(boolean canJump) {
+        this.canJump = canJump;
+    }
+
+    public int getVelocityY() {
+        return velocityY;
+    }
+
+    public void setVelocityY(int velocityY) {
+        this.velocityY = velocityY;
+    }
+
+
 }

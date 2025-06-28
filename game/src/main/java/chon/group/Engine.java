@@ -1,11 +1,14 @@
 package chon.group;
 
 import java.util.ArrayList;
+import java.util.Iterator;
 
 import chon.group.game.domain.agent.Agent;
 import chon.group.game.domain.agent.Cannon;
+import chon.group.game.domain.agent.Collision;
 import chon.group.game.domain.agent.Fireball;
 import chon.group.game.domain.agent.Hitbox;
+import chon.group.game.domain.agent.Shot;
 import chon.group.game.domain.agent.Weapon;
 import chon.group.game.domain.environment.Environment;
 import chon.group.game.drawer.EnvironmentDrawer;
@@ -78,6 +81,9 @@ public class Engine extends Application {
             environment.getAgents().add(chonBot);
             environment.setPauseImage("/images/environment/pause.png");
             environment.setGameOverImage("/images/environment/gameover.png");
+            Collision collision = new Collision(256, 200, 64, 64, "/images/agents/brick.png", false, true, 200, false, false, false);
+            //environment.createGround(64, "/images/agents/brick.png");
+            environment.getCollisions().add(collision);
 
             if (drawHitboxes) {
                 for(Agent agent : environment.getAgents()) {
@@ -157,6 +163,7 @@ public class Engine extends Application {
                         if (isPaused) {
                             mediator.drawBackground();
                             mediator.drawAgents();
+                            mediator.drawCollisions();
                             mediator.drawMessages();
                             mediator.drawShots();
                             /* Rendering the Pause Screen */
@@ -170,6 +177,11 @@ public class Engine extends Application {
 
                             /* ChonBota Only Moves if the Player Press Something */
                             /* Update the protagonist's movements if input exists */
+                            for (Agent agent : environment.getAgents()) {
+                                agent.gravityEffect();
+                            }
+                            environment.getProtagonist().gravityEffect();
+
                             if (!input.isEmpty()) {
                                 /* ChonBota Shoots Somebody Who Outdrew You */
                                 if (input.contains("SPACE")) {
@@ -184,8 +196,34 @@ public class Engine extends Application {
                                             direction));
                                 }
                                 /* ChonBota's Movements */
-                                environment.getProtagonist().move(input);
-                                environment.checkBorders();
+                                environment.getProtagonist().gravityMove(input);
+
+                            }
+                            environment.checkBorders(environment.getProtagonist());
+                            for (Agent agent : environment.getAgents()) {
+                                environment.checkBorders(agent);
+                            }
+                            Iterator<Collision> it = environment.getCollisions().iterator();
+                            while (it.hasNext()) {
+                                Collision collision = it.next();
+
+                                Iterator<Shot> itShot = environment.getShots().iterator();
+                                while (itShot.hasNext()) {
+                                    Shot tempShot = itShot.next();
+                                    tempShot.checkCollision(collision);
+                                    if (collision.isDestroy()) break; 
+                                }
+                                
+                                for (Agent agent : environment.getAgents()) {
+                                    agent.checkCollision(collision, environment);
+                                    if (collision.isDestroy()) break;
+                                }
+
+                                environment.getProtagonist().checkCollision(collision, environment);
+                                
+                                if (collision.isDestroy()) {
+                                    it.remove(); // remove com segurança da lista
+                                }
                             }
                             /* ChonBot's Automatic Movements */
                             /* Update the other agents' movements */
@@ -199,6 +237,7 @@ public class Engine extends Application {
                             environment.updateMessages();
                             mediator.drawBackground();
                             mediator.drawAgents();
+                            mediator.drawCollisions();
                             mediator.drawShots();
                             mediator.drawMessages();
                         }
