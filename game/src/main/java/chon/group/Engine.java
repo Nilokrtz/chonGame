@@ -114,7 +114,6 @@ public class Engine extends Application {
             scene.setOnKeyPressed(new EventHandler<KeyEvent>() {
                 public void handle(KeyEvent e) {
                     String code = e.getCode().toString();
-                    input.clear();
 
                     System.out.println("Pressed: " + code);
 
@@ -125,7 +124,6 @@ public class Engine extends Application {
                     if (!isPaused && !input.contains(code)) {
                         input.add(code);
                     }
-
                 }
             });
 
