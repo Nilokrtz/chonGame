@@ -1,5 +1,6 @@
 package chon.group.game.domain.agent;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import chon.group.game.core.Entity;
@@ -214,6 +215,26 @@ public class Agent extends Entity {
         }
 
         updateHitboxPosition();
+    }
+
+    @Override
+    /**
+     * Makes the entity chase a target based on its coordinates.
+     *
+     * @param targetX the target's X (horizontal) position
+     * @param targetY the target's Y (vertical) position
+     */
+    public void chase(int targetX, int targetY) {
+        if (targetX > getPosX()) {
+            this.gravityMove(new ArrayList<String>(List.of("RIGHT")));
+        } else if (targetX < getPosX()) {
+            this.gravityMove(new ArrayList<String>(List.of("LEFT")));
+        }
+        if (targetY > getPosY()) {
+            gravityMove(new ArrayList<String>(List.of("DOWN")));
+        } /*else if (targetY < getPosY()) {
+            this.gravityMove(new ArrayList<String>(List.of("UP")));
+        }*/
     }
 
     public void gravityEffect() {
