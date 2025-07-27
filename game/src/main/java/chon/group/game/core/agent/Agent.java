@@ -24,19 +24,7 @@ public class Agent extends Entity {
 
     /** The Agent's Weapon */
     private Weapon weapon;
-    
-    /*Flag to stop the invulnerability status of the agent when on menu */
-    private boolean checkMenu = false;
-    
-   
-    public void setCheckMenu(boolean checkMenu){
-        this.checkMenu = checkMenu;
-    }
 
-    public boolean getCheckMenu(){
-        return checkMenu;
-    }
-    
     /** The initial agent's energy */
     private double energy;
 
@@ -209,16 +197,11 @@ public class Agent extends Entity {
      * @return if the agent is still invulnerable
      */
     private boolean updateInvulnerability() {
-    if (checkMenu) {
-        // Congela o timer de invulnerabilidade enquanto está no menu
-        lastHitTime = System.currentTimeMillis();
+        if (System.currentTimeMillis() - lastHitTime >= INVULNERABILITY_COOLDOWN) {
+            return false;
+        }
         return true;
     }
-    if (System.currentTimeMillis() - lastHitTime >= INVULNERABILITY_COOLDOWN) {
-        return false;
-    }
-    return true;
-}
 
     public Shot useWeapon() {
         String direction = this.isFlipped() ? "LEFT" : "RIGHT";

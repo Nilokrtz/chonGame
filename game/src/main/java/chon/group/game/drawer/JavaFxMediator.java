@@ -9,8 +9,6 @@ import chon.group.game.core.weapon.Shot;
 import chon.group.game.messaging.Message;
 import javafx.scene.canvas.GraphicsContext;
 import javafx.scene.paint.Color;
-import chon.group.game.menu.MainMenu;
-import chon.group.game.menu.PauseMenu;
 
 /**
  * The {@code JavaFxMediator} class serves as an intermediary for rendering the
@@ -260,32 +258,4 @@ public class JavaFxMediator implements EnvironmentDrawer {
                     shot.getHeight());
         }
     }
-
-    /**
-     * Draws the main menu with the specified background image, title, selected
-     */
-    @Override
-    public void drawMainMenu(MainMenu menu) {
-    drawer.drawMainMenu(
-        menu.getBackgroundImage(),
-        "Chon Game",
-        menu.getSelectedOptionIndex(),
-        menu.getLabels() // você pode criar um método getLabels() no Menu
-    );
-    }
-
-    /**
-     * Draws the pause menu with the specified background image, title, and
-     */
-    @Override
-    public void drawPauseMenu(PauseMenu menuPause) {
-    drawer.drawMenuPause(
-        "Paused",
-        menuPause.getSelectedOptionIndex(),
-        menuPause.getBackgroundImage(),
-        menuPause.getLabels() // idem
-    );
-    }
-
-
 }
